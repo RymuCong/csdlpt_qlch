@@ -29,13 +29,21 @@ public class EmployeeController {
     
     /**
      * Hiển thị danh sách nhân viên (theo cửa hàng hiện tại)
+     * Trả về TẤT CẢ dữ liệu để DataTables xử lý phân trang ở client-side
      */
     @GetMapping
-    public String showEmployees(Model model, HttpSession session) {
+    public String showEmployees(Model model, 
+                               HttpSession session) {
         String storeId = (String) session.getAttribute("storeId");
-        List<Employee> employees;
+        String employeePosition = (String) session.getAttribute("employeePosition");
         
-        if (storeId != null) {
+        // Nếu là TS01 (trụ sở chính) hoặc ADMIN, hiển thị tất cả nhân viên
+        // Nếu là chi nhánh (CN01-CN07), chỉ hiển thị nhân viên của chi nhánh đó
+        boolean shouldFilterByStore = storeId != null && !storeId.equals("TS01") 
+                                     && !"ADMIN".equals(employeePosition);
+        
+        List<Employee> employees;
+        if (shouldFilterByStore) {
             employees = employeeService.getEmployeesByStore(storeId);
         } else {
             employees = employeeService.getAllEmployees();
@@ -164,17 +172,31 @@ public class EmployeeController {
     
     /**
      * Lọc nhân viên theo chức vụ
+     * Trả về TẤT CẢ dữ liệu để DataTables xử lý phân trang ở client-side
      */
     @GetMapping("/filter")
     public String filterByPosition(@RequestParam(required = false) PositionType position,
                                    @RequestParam(required = false) String storeId,
-                                   Model model) {
-        List<Employee> employees;
+                                   Model model,
+                                   HttpSession session) {
+        String sessionStoreId = (String) session.getAttribute("storeId");
+        String employeePosition = (String) session.getAttribute("employeePosition");
         
-        if (position != null && storeId != null) {
-            employees = employeeService.getEmployeesByStoreAndPosition(storeId, position);
-        } else if (storeId != null) {
-            employees = employeeService.getEmployeesByStore(storeId);
+        // Nếu filter có storeId từ request, ưu tiên dùng storeId đó
+        // Nếu không có, kiểm tra session: TS01 hoặc ADMIN thì hiển thị tất cả
+        boolean shouldFilterByStore = (storeId != null && !storeId.equals("TS01")) 
+                                     || (storeId == null && sessionStoreId != null 
+                                         && !sessionStoreId.equals("TS01") 
+                                         && !"ADMIN".equals(employeePosition));
+        
+        String filterStoreId = storeId != null ? storeId : 
+                              (shouldFilterByStore ? sessionStoreId : null);
+        
+        List<Employee> employees;
+        if (position != null && filterStoreId != null) {
+            employees = employeeService.getEmployeesByStoreAndPosition(filterStoreId, position);
+        } else if (filterStoreId != null) {
+            employees = employeeService.getEmployeesByStore(filterStoreId);
         } else if (position != null) {
             employees = employeeService.getEmployeesByPosition(position);
         } else {

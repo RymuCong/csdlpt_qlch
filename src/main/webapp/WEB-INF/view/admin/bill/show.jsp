@@ -86,7 +86,7 @@
                                             </td>
                                             <td>
                                                 <strong class="text-success">
-                                                    <fmt:formatNumber value="${bill.totalPrice}" type="currency" currencySymbol="₫" />
+                                                    <fmt:formatNumber value="${bill.totalPrice}" type="currency" currencySymbol="₫" maxFractionDigits="0" />
                                                 </strong>
                                             </td>
                                             <td>
@@ -127,15 +127,34 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/scripts.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <script>
         $(document).ready(function() {
-            $('#datatablesSimple').DataTable({
+            let table = $('#datatablesSimple').DataTable({
                 language: {
-                    url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/vi.json'
+                    url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/vi.json',
+                    search: "Tìm kiếm:",
+                    lengthMenu: "Hiển thị _MENU_ bản ghi",
+                    info: "Hiển thị _START_ đến _END_ trong tổng số _TOTAL_ bản ghi",
+                    infoEmpty: "Không có dữ liệu",
+                    infoFiltered: "(lọc từ _MAX_ tổng số bản ghi)",
+                    paginate: {
+                        first: "Đầu",
+                        last: "Cuối",
+                        next: "Sau",
+                        previous: "Trước"
+                    }
                 },
-                order: [[1, 'desc']] // Sắp xếp theo ngày giảm dần
+                order: [[1, 'desc']], // Sắp xếp theo ngày giảm dần
+                pageLength: 10,
+                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Tất cả"]],
+                responsive: true,
+                dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+                columnDefs: [
+                    { orderable: false, targets: 7 } // Cột "Thao tác" không sắp xếp được
+                ]
             });
         });
     </script>

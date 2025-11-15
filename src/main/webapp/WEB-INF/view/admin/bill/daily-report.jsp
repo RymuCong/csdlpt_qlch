@@ -62,7 +62,7 @@
                                         <div>
                                             <div class="text-white-75 small">Tổng doanh thu</div>
                                             <div class="h4 mb-0">
-                                                <fmt:formatNumber value="${report.revenue}" type="currency" currencySymbol="₫" />
+                                                <fmt:formatNumber value="${report.revenue}" type="currency" currencySymbol="₫" maxFractionDigits="0" />
                                             </div>
                                         </div>
                                         <div>
@@ -96,7 +96,7 @@
                                         <div>
                                             <div class="text-white-75 small">Giá trị TB/HĐ</div>
                                             <div class="h5 mb-0">
-                                                <fmt:formatNumber value="${report.averageOrderValue}" type="currency" currencySymbol="₫" />
+                                                <fmt:formatNumber value="${report.averageOrderValue}" type="currency" currencySymbol="₫" maxFractionDigits="0" />
                                             </div>
                                         </div>
                                         <div>

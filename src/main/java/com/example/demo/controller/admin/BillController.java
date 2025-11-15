@@ -10,7 +10,6 @@ import com.example.demo.service.EmployeeService;
 import com.example.demo.service.ProductService;
 
 import jakarta.servlet.http.HttpSession;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -35,7 +34,6 @@ public class BillController {
     private final CustomerService customerService;
     private final ProductService productService;
 
-    @Autowired
     public BillController(BillService billService,
                          EmployeeService employeeService,
                          CustomerService customerService,
@@ -48,6 +46,7 @@ public class BillController {
     
     /**
      * Hiển thị danh sách hóa đơn
+     * Trả về TẤT CẢ dữ liệu để DataTables xử lý phân trang ở client-side
      */
     @GetMapping
     public String showBills(Model model) {

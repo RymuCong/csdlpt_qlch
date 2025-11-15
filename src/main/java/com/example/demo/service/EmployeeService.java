@@ -7,6 +7,7 @@ import com.example.demo.repository.StoreRepository;
 import com.example.demo.util.IdGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,11 +23,16 @@ public class EmployeeService {
     private final EmployeeRepository employeeRepository;
     private final StoreRepository storeRepository;
     private final IdGenerator idGenerator;
+    private final PasswordEncoder passwordEncoder;
     
-    public EmployeeService(EmployeeRepository employeeRepository, StoreRepository storeRepository, IdGenerator idGenerator) {
+    public EmployeeService(EmployeeRepository employeeRepository, 
+                          StoreRepository storeRepository, 
+                          IdGenerator idGenerator,
+                          PasswordEncoder passwordEncoder) {
         this.employeeRepository = employeeRepository;
         this.storeRepository = storeRepository;
         this.idGenerator = idGenerator;
+        this.passwordEncoder = passwordEncoder;
     }
     
     /**
@@ -50,6 +56,13 @@ public class EmployeeService {
         long employeeCount = employeeRepository.findByStoreId(storeId).size();
         employee.setId(idGenerator.generateEmployeeId(storeId, employeeCount));
         
+        // Hash password trước khi lưu
+        if (employee.getPassword() != null && !employee.getPassword().isEmpty()) {
+            String hashedPassword = passwordEncoder.encode(employee.getPassword());
+            employee.setPassword(hashedPassword);
+            log.info("🔐 Đã hash mật khẩu cho nhân viên: {}", employee.getId());
+        }
+        
         Employee savedEmployee = employeeRepository.save(employee);
         log.info("✅ Tạo nhân viên thành công: {} - {} - {}", 
                  savedEmployee.getId(), savedEmployee.getName(), savedEmployee.getPosition().getDisplayName());
@@ -72,6 +85,26 @@ public class EmployeeService {
                 && empWithPhone.get().getStore().getId().equals(employee.getStore().getId())) {
             log.error("❌ Số điện thoại đã được sử dụng bởi nhân viên khác trong cửa hàng: {}", employee.getPhone());
             throw new IllegalArgumentException("Số điện thoại đã được sử dụng bởi nhân viên khác trong cửa hàng");
+        }
+        
+        // Xử lý password: Nếu password mới được cung cấp và chưa được hash (không bắt đầu bằng $2a$ hoặc $2b$), thì hash nó
+        // Nếu password đã là hash (bắt đầu bằng $2a$ hoặc $2b$), giữ nguyên
+        if (employee.getPassword() != null && !employee.getPassword().isEmpty()) {
+            String currentPassword = employee.getPassword();
+            // Kiểm tra xem password có phải là BCrypt hash không (BCrypt hash bắt đầu bằng $2a$ hoặc $2b$)
+            if (!currentPassword.startsWith("$2a$") && !currentPassword.startsWith("$2b$")) {
+                // Password chưa được hash, hash nó
+                String hashedPassword = passwordEncoder.encode(currentPassword);
+                employee.setPassword(hashedPassword);
+                log.info("🔐 Đã hash mật khẩu mới cho nhân viên: {}", employee.getId());
+            } else {
+                // Password đã được hash, giữ nguyên
+                log.info("🔐 Mật khẩu đã được hash, giữ nguyên cho nhân viên: {}", employee.getId());
+            }
+        } else {
+            // Nếu password rỗng, giữ nguyên password cũ từ database
+            employee.setPassword(existingEmployee.get().getPassword());
+            log.info("🔐 Giữ nguyên mật khẩu cũ cho nhân viên: {}", employee.getId());
         }
         
         Employee updatedEmployee = employeeRepository.save(employee);

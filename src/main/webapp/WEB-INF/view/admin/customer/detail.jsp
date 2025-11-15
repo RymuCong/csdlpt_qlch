@@ -93,7 +93,7 @@
                                                 <th><i class="fas fa-money-bill-wave me-2 text-muted"></i>Tổng chi tiêu</th>
                                                 <td>
                                                     <strong class="text-success">
-                                                        <fmt:formatNumber value="${customer.totalPayment}" type="currency" currencySymbol="₫" />
+                                                        <fmt:formatNumber value="${customer.totalPayment}" type="currency" currencySymbol="₫" maxFractionDigits="0" />
                                                     </strong>
                                                 </td>
                                             </tr>
@@ -138,7 +138,7 @@
                                     <c:choose>
                                         <c:when test="${customer.level < 4}">
                                             <div class="mb-3">
-                                                <h6>Còn <fmt:formatNumber value="${nextLevelAmount - totalPaymentValue}" type="currency" currencySymbol="₫" /> để lên cấp ${customer.level + 1}</h6>
+                                                <h6>Còn <fmt:formatNumber value="${nextLevelAmount - totalPaymentValue}" type="currency" currencySymbol="₫" maxFractionDigits="0" /> để lên cấp ${customer.level + 1}</h6>
                                                 <div class="progress" style="height: 25px;">
                                                     <div class="progress-bar bg-success" role="progressbar" 
                                                          style="width: ${progressPercent > 100 ? 100 : progressPercent}%">

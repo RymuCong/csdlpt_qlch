@@ -107,17 +107,6 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="col-md-12 mb-3">
-                                                <div class="card bg-light">
-                                                    <div class="card-body">
-                                                        <h6 class="text-muted">Doanh thu tháng này</h6>
-                                                        <h2 class="text-success">
-                                                            <i class="fas fa-money-bill-wave"></i>
-                                                            <fmt:formatNumber value="${stats.monthlyRevenue}" type="currency" currencySymbol="₫" />
-                                                        </h2>
-                                                    </div>
-                                                </div>
-                                            </div>
                                         </div>
                                     </c:if>
                                     

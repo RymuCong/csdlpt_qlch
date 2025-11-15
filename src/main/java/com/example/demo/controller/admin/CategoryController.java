@@ -4,7 +4,6 @@ import com.example.demo.domain.Category;
 import com.example.demo.service.CategoryService;
 
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -19,13 +18,13 @@ public class CategoryController {
     
     private final CategoryService categoryService;
 
-    @Autowired
     public CategoryController(CategoryService categoryService) {
         this.categoryService = categoryService;
     }
     
     /**
      * Hiển thị danh sách danh mục
+     * Trả về TẤT CẢ dữ liệu để DataTables xử lý phân trang ở client-side
      */
     @GetMapping
     public String showCategories(Model model) {

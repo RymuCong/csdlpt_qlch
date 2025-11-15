@@ -9,16 +9,13 @@ import com.example.demo.service.ProductService.InventoryReport;
 
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,7 +35,6 @@ public class ProductController {
     private final CategoryService categoryService;
     private final UploadService uploadService;
 
-    @Autowired
     public ProductController(ProductService productService,
                             StoreService storeService,
                             CategoryService categoryService,
@@ -51,36 +47,31 @@ public class ProductController {
 
     /**
      * Hiển thị danh sách sản phẩm (theo cửa hàng nếu có trong session)
+     * Trả về TẤT CẢ dữ liệu để DataTables xử lý phân trang ở client-side
      */
     @GetMapping
     public String showProducts(Model model, 
-                              @RequestParam("page") Optional<String> pageOptional,
                               HttpSession session) {
-        int page = 1;
-        try {
-            if (pageOptional.isPresent()) {
-                page = Integer.parseInt(pageOptional.get());
-            }
-        } catch (Exception e) {
-            // Sử dụng page mặc định
-        }
-        
-        Pageable pageable = PageRequest.of(page - 1, 10);
         String storeId = (String) session.getAttribute("storeId");
+        String employeePosition = (String) session.getAttribute("employeePosition");
         
-        Page<Product> productsPage;
-        if (storeId != null) {
-            productsPage = productService.getProductsByStore(storeId, pageable);
+        // Nếu là TS01 (trụ sở chính) hoặc ADMIN, hiển thị tất cả sản phẩm
+        // Nếu là chi nhánh (CN01-CN07), chỉ hiển thị sản phẩm của chi nhánh đó
+        boolean shouldFilterByStore = storeId != null && !storeId.equals("TS01") 
+                                     && !"ADMIN".equals(employeePosition);
+        
+        List<Product> products;
+        if (shouldFilterByStore) {
+            products = productService.getProductsByStore(storeId);
         } else {
-            productsPage = productService.getAllProducts(pageable);
+            // Lấy tất cả sản phẩm (không phân trang) - để DataTables xử lý phân trang ở client-side
+            products = productService.getAllProducts();
         }
         
-        model.addAttribute("products", productsPage.getContent());
-        model.addAttribute("currentPage", page);
-        model.addAttribute("totalPages", productsPage.getTotalPages());
+        model.addAttribute("products", products);
         
-        // Thống kê nhanh
-        if (storeId != null) {
+        // Thống kê nhanh - chỉ tính cho chi nhánh cụ thể
+        if (shouldFilterByStore) {
             Long lowStockCount = productService.countLowStockProducts(storeId, 10);
             model.addAttribute("lowStockCount", lowStockCount);
         }
@@ -232,16 +223,34 @@ public class ProductController {
      */
     @GetMapping("/low-stock")
     public String showLowStockProducts(@RequestParam(defaultValue = "10") Integer threshold,
+                                      @RequestParam(required = false) String storeId,
                                       Model model,
                                       HttpSession session) {
-        String storeId = (String) session.getAttribute("storeId");
-        if (storeId == null) {
-            return "redirect:/admin/product?error=no_store";
+        String sessionStoreId = (String) session.getAttribute("storeId");
+        String employeePosition = (String) session.getAttribute("employeePosition");
+        
+        // Nếu không có storeId từ request, dùng từ session
+        String filterStoreId = storeId != null ? storeId : sessionStoreId;
+        
+        // Nếu là TS01 hoặc ADMIN, hiển thị tất cả (hoặc có thể filter theo storeId nếu có)
+        // Nếu là chi nhánh, chỉ hiển thị của chi nhánh đó
+        boolean shouldFilterByStore = filterStoreId != null && !filterStoreId.equals("TS01") 
+                                     && !"ADMIN".equals(employeePosition);
+        
+        List<Product> lowStockProducts;
+        if (shouldFilterByStore && filterStoreId != null) {
+            lowStockProducts = productService.getLowStockProducts(filterStoreId, threshold);
+        } else {
+            // Lấy tất cả sản phẩm sắp hết hàng từ tất cả chi nhánh
+            List<Product> allProducts = productService.getAllProducts();
+            lowStockProducts = allProducts.stream()
+                .filter(p -> p.getQuantity() < threshold)
+                .toList();
         }
         
-        List<Product> lowStockProducts = productService.getLowStockProducts(storeId, threshold);
         model.addAttribute("products", lowStockProducts);
         model.addAttribute("threshold", threshold);
+        model.addAttribute("filterStoreId", filterStoreId);
         return "admin/product/low-stock";
     }
 
@@ -250,16 +259,35 @@ public class ProductController {
      */
     @GetMapping("/expiring")
     public String showExpiringProducts(@RequestParam(defaultValue = "30") Integer days,
+                                      @RequestParam(required = false) String storeId,
                                       Model model,
                                       HttpSession session) {
-        String storeId = (String) session.getAttribute("storeId");
-        if (storeId == null) {
-            return "redirect:/admin/product?error=no_store";
+        String sessionStoreId = (String) session.getAttribute("storeId");
+        String employeePosition = (String) session.getAttribute("employeePosition");
+        
+        // Nếu không có storeId từ request, dùng từ session
+        String filterStoreId = storeId != null ? storeId : sessionStoreId;
+        
+        // Nếu là TS01 hoặc ADMIN, hiển thị tất cả (hoặc có thể filter theo storeId nếu có)
+        // Nếu là chi nhánh, chỉ hiển thị của chi nhánh đó
+        boolean shouldFilterByStore = filterStoreId != null && !filterStoreId.equals("TS01") 
+                                     && !"ADMIN".equals(employeePosition);
+        
+        List<Product> expiringProducts;
+        if (shouldFilterByStore && filterStoreId != null) {
+            expiringProducts = productService.getExpiringProducts(filterStoreId, days);
+        } else {
+            // Lấy tất cả sản phẩm sắp hết hạn từ tất cả chi nhánh
+            LocalDate expiryDate = LocalDate.now().plusDays(days);
+            List<Product> allProducts = productService.getAllProducts();
+            expiringProducts = allProducts.stream()
+                .filter(p -> p.getExpDate() != null && p.getExpDate().isBefore(expiryDate))
+                .toList();
         }
         
-        List<Product> expiringProducts = productService.getExpiringProducts(storeId, days);
         model.addAttribute("products", expiringProducts);
         model.addAttribute("days", days);
+        model.addAttribute("filterStoreId", filterStoreId);
         return "admin/product/expiring";
     }
 
@@ -267,14 +295,37 @@ public class ProductController {
      * Báo cáo kho hàng
      */
     @GetMapping("/inventory-report")
-    public String showInventoryReport(Model model, HttpSession session) {
-        String storeId = (String) session.getAttribute("storeId");
-        if (storeId == null) {
-            return "redirect:/admin/product?error=no_store";
+    public String showInventoryReport(@RequestParam(required = false) String storeId,
+                                     Model model, 
+                                     HttpSession session) {
+        String sessionStoreId = (String) session.getAttribute("storeId");
+        String employeePosition = (String) session.getAttribute("employeePosition");
+        
+        // Nếu không có storeId từ request, dùng từ session
+        String filterStoreId = storeId != null ? storeId : sessionStoreId;
+        
+        // Nếu là TS01 hoặc ADMIN, có thể xem báo cáo tổng hợp hoặc theo chi nhánh
+        // Nếu là chi nhánh, chỉ xem báo cáo của chi nhánh đó
+        boolean shouldFilterByStore = filterStoreId != null && !filterStoreId.equals("TS01") 
+                                     && !"ADMIN".equals(employeePosition);
+        
+        InventoryReport report;
+        if (shouldFilterByStore && filterStoreId != null) {
+            // Chi nhánh: lấy báo cáo của chi nhánh đó
+            report = productService.getInventoryReport(filterStoreId);
+        } else {
+            // TS01 hoặc ADMIN: có thể xem tổng hợp hoặc theo chi nhánh cụ thể
+            if (filterStoreId != null && !filterStoreId.equals("TS01")) {
+                // Nếu có storeId cụ thể (không phải TS01), lấy báo cáo của chi nhánh đó
+                report = productService.getInventoryReport(filterStoreId);
+            } else {
+                // Nếu là TS01 hoặc không có storeId, lấy báo cáo tổng hợp từ tất cả chi nhánh
+                report = productService.getAggregatedInventoryReport();
+            }
         }
         
-        InventoryReport report = productService.getInventoryReport(storeId);
         model.addAttribute("report", report);
+        model.addAttribute("filterStoreId", filterStoreId);
         return "admin/product/inventory-report";
     }
 

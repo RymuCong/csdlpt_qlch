@@ -38,11 +38,7 @@
                                     <form:form method="post" action="/admin/employee/create" 
                                                modelAttribute="newEmployee" acceptCharset="UTF-8">
                                         <div class="row mb-3">
-                                            <div class="col-md-6">
-                                                <label class="form-label">Mã nhân viên:</label>
-                                                <form:input path="id" class="form-control" required="true" />
-                                            </div>
-                                            <div class="col-md-6">
+                                            <div class="col-md-12">
                                                 <label class="form-label">Họ tên:</label>
                                                 <form:input path="name" class="form-control" required="true" />
                                             </div>

@@ -11,6 +11,7 @@ import com.example.demo.util.IdGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -123,6 +124,21 @@ public class ProductService {
     }
     
     /**
+     * Lấy tất cả sản phẩm (không phân trang) - cho DataTables client-side pagination
+     */
+    public List<Product> getAllProducts() {
+        return productRepository.findAll();
+    }
+    
+    /**
+     * Lấy sản phẩm mới nhất (cho trang chủ)
+     */
+    public List<Product> getNewestProducts(int limit) {
+        Pageable pageable = PageRequest.of(0, limit);
+        return productRepository.findNewestProducts(pageable);
+    }
+    
+    /**
      * Lấy sản phẩm theo cửa hàng (Data Partitioning)
      */
     public List<Product> getProductsByStore(String storeId) {
@@ -151,10 +167,20 @@ public class ProductService {
     }
     
     /**
-     * Tìm kiếm sản phẩm theo tên
+     * Tìm kiếm sản phẩm theo tên (với storeId)
      */
     public List<Product> searchProducts(String keyword, String storeId) {
         return productRepository.searchByName(keyword, storeId);
+    }
+    
+    /**
+     * Tìm kiếm sản phẩm theo tên (tất cả sản phẩm - cho client)
+     */
+    public List<Product> searchProductsAll(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return getAllProducts();
+        }
+        return productRepository.searchByNameAll(keyword.trim());
     }
     
     /**
@@ -297,6 +323,13 @@ public class ProductService {
         return productRepository.calculateInventoryValue(storeId);
     }
     
+    /**
+     * Tính tổng số lượng (tổng quantity) theo cửa hàng
+     */
+    public Long calculateTotalQuantity(String storeId) {
+        return productRepository.calculateTotalQuantity(storeId);
+    }
+    
     // ============= TÌM KIẾM VỚI SPECIFICATION =============
     
     /**
@@ -337,12 +370,13 @@ public class ProductService {
     }
     
     /**
-     * DTO cho báo cáo kho hàng
+     * DTO cho báo cáo kho hàng (theo một cửa hàng cụ thể)
      */
     public InventoryReport getInventoryReport(String storeId) {
         InventoryReport report = new InventoryReport();
         report.setStoreId(storeId);
         report.setTotalProducts(countProductsByStore(storeId));
+        report.setTotalQuantity(calculateTotalQuantity(storeId));
         report.setLowStockCount(countLowStockProducts(storeId, 10));
         report.setOutOfStockCount((long) getOutOfStockProducts(storeId).size());
         report.setExpiringCount((long) getExpiringProducts(storeId, 30).size());
@@ -351,9 +385,57 @@ public class ProductService {
         return report;
     }
     
+    /**
+     * Báo cáo kho hàng tổng hợp từ tất cả các chi nhánh (cho TS01/ADMIN)
+     */
+    public InventoryReport getAggregatedInventoryReport() {
+        InventoryReport report = new InventoryReport();
+        report.setStoreId("ALL"); // Đánh dấu là báo cáo tổng hợp
+        
+        // Lấy tất cả sản phẩm
+        List<Product> allProducts = getAllProducts();
+        
+        // Tính tổng số sản phẩm
+        report.setTotalProducts((long) allProducts.size());
+        
+        // Tính tổng số lượng (tổng quantity của tất cả sản phẩm)
+        long totalQuantity = allProducts.stream()
+            .mapToLong(Product::getQuantity)
+            .sum();
+        report.setTotalQuantity(totalQuantity);
+        
+        // Tính số sản phẩm sắp hết hàng (quantity < 10)
+        long lowStockCount = allProducts.stream()
+            .filter(p -> p.getQuantity() < 10)
+            .count();
+        report.setLowStockCount(lowStockCount);
+        
+        // Tính số sản phẩm hết hàng (quantity = 0)
+        long outOfStockCount = allProducts.stream()
+            .filter(p -> p.getQuantity() == 0)
+            .count();
+        report.setOutOfStockCount(outOfStockCount);
+        
+        // Tính số sản phẩm sắp hết hạn (trong 30 ngày)
+        LocalDate expiryDate = LocalDate.now().plusDays(30);
+        long expiringCount = allProducts.stream()
+            .filter(p -> p.getExpDate() != null && p.getExpDate().isBefore(expiryDate) && !p.getExpDate().isBefore(LocalDate.now()))
+            .count();
+        report.setExpiringCount(expiringCount);
+        
+        // Tính tổng giá trị kho hàng
+        BigDecimal totalInventoryValue = allProducts.stream()
+            .map(p -> p.getPrice().multiply(BigDecimal.valueOf(p.getQuantity())))
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+        report.setInventoryValue(totalInventoryValue);
+        
+        return report;
+    }
+    
     public static class InventoryReport {
         private String storeId;
         private Long totalProducts;
+        private Long totalQuantity; // Tổng số lượng (tổng quantity của tất cả sản phẩm)
         private Long lowStockCount;
         private Long outOfStockCount;
         private Long expiringCount;
@@ -364,6 +446,8 @@ public class ProductService {
         public void setStoreId(String storeId) { this.storeId = storeId; }
         public Long getTotalProducts() { return totalProducts; }
         public void setTotalProducts(Long totalProducts) { this.totalProducts = totalProducts; }
+        public Long getTotalQuantity() { return totalQuantity; }
+        public void setTotalQuantity(Long totalQuantity) { this.totalQuantity = totalQuantity; }
         public Long getLowStockCount() { return lowStockCount; }
         public void setLowStockCount(Long lowStockCount) { this.lowStockCount = lowStockCount; }
         public Long getOutOfStockCount() { return outOfStockCount; }
