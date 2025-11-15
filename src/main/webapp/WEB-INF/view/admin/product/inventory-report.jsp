@@ -57,7 +57,7 @@
                                         <div>
                                             <div class="text-white-75 small">Tổng số lượng</div>
                                             <div class="h2 mb-0">
-                                                <fmt:formatNumber value="${report.totalProducts}" type="number" groupingUsed="true" />
+                                                <fmt:formatNumber value="${report.totalQuantity != null ? report.totalQuantity : 0}" type="number" groupingUsed="true" />
                                             </div>
                                         </div>
                                         <div>
@@ -77,7 +77,7 @@
                                         <div>
                                             <div class="text-white-75 small">Giá trị kho</div>
                                             <div class="h5 mb-0">
-                                                <fmt:formatNumber value="${report.inventoryValue}" type="currency" currencySymbol="₫" />
+                                                <fmt:formatNumber value="${report.inventoryValue}" type="currency" currencySymbol="₫" maxFractionDigits="0" />
                                             </div>
                                         </div>
                                         <div>

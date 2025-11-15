@@ -130,14 +130,14 @@
                                                             <small class="text-muted">Mã: ${detail.product.id}</small>
                                                         </td>
                                                         <td class="text-end">
-                                                            <fmt:formatNumber value="${detail.product.price}" type="currency" currencySymbol="₫" />
+                                                            <fmt:formatNumber value="${detail.product.price}" type="currency" currencySymbol="₫" maxFractionDigits="0" />
                                                         </td>
                                                         <td class="text-center">
                                                             <span class="badge bg-secondary">${detail.quantity}</span>
                                                         </td>
                                                         <td class="text-end">
                                                             <strong>
-                                                                <fmt:formatNumber value="${lineTotal}" type="currency" currencySymbol="₫" />
+                                                                <fmt:formatNumber value="${lineTotal}" type="currency" currencySymbol="₫" maxFractionDigits="0" />
                                                             </strong>
                                                         </td>
                                                     </tr>
@@ -158,13 +158,13 @@
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between mb-2">
                                         <span>Tạm tính:</span>
-                                        <strong><fmt:formatNumber value="${subtotal}" type="currency" currencySymbol="₫" /></strong>
+                                        <strong><fmt:formatNumber value="${subtotal}" type="currency" currencySymbol="₫" maxFractionDigits="0" /></strong>
                                     </div>
 
                                     <c:if test="${bill.discount > 0}">
                                         <div class="d-flex justify-content-between mb-2 text-danger">
                                             <span>Giảm giá (${bill.discount}%):</span>
-                                            <strong>-<fmt:formatNumber value="${subtotal * bill.discount / 100}" type="currency" currencySymbol="₫" /></strong>
+                                            <strong>-<fmt:formatNumber value="${subtotal * bill.discount / 100}" type="currency" currencySymbol="₫" maxFractionDigits="0" /></strong>
                                         </div>
                                     </c:if>
 
@@ -173,7 +173,7 @@
                                     <div class="d-flex justify-content-between mb-3">
                                         <h5>Tổng cộng:</h5>
                                         <h4 class="text-success">
-                                            <fmt:formatNumber value="${bill.totalPrice}" type="currency" currencySymbol="₫" />
+                                            <fmt:formatNumber value="${bill.totalPrice}" type="currency" currencySymbol="₫" maxFractionDigits="0" />
                                         </h4>
                                     </div>
 

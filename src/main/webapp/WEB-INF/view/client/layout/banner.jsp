@@ -1,23 +1,39 @@
 <!-- Hero Start -->
 <%@page contentType="text/html" pageEncoding="UTF-8" %>
-<div class="container-fluid py-5 mb-5 hero-header" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;">
+<div class="container-fluid py-5 mb-5 hero-header" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;">
     <div class="container py-5">
         <div class="row g-5 align-items-center">
             <div class="col-md-12 col-lg-7">
                 <h4 class="mb-3 text-white"><i class="fas fa-store-alt me-2"></i>Chuỗi Cửa Hàng Tiện Lợi</h4>
-                <h1 class="mb-4 display-3 text-white">MiniMart Plus</h1>
-                <p class="text-white mb-5">
+                <h1 class="mb-4 display-3 text-white fw-bold">RedMart</h1>
+                <p class="text-white mb-5 lead">
                     <i class="fas fa-shopping-basket me-2"></i>Mua sắm tiện lợi - Giá cả phải chăng - Phục vụ 24/7
                 </p>
-                <div class="position-relative mx-auto">
-                    <input class="form-control border-2 border-white w-75 py-3 px-4 rounded-pill"
-                        type="text" placeholder="Tìm kiếm sản phẩm...">
+                <form action="/search" method="get" class="position-relative mx-auto" id="searchForm">
+                    <input id="searchKeyword" name="keyword" class="form-control border-2 border-white w-75 py-3 px-4 rounded-pill"
+                        type="text" placeholder="Tìm kiếm sản phẩm..." autocomplete="off">
                     <button type="submit"
-                        class="btn btn-light border-2 border-white py-3 px-4 position-absolute rounded-pill text-success h-100"
+                        class="btn btn-light border-2 border-white py-3 px-4 position-absolute rounded-pill text-danger h-100"
                         style="top: 0; right: 25%;">
                         <i class="fas fa-search"></i> Tìm kiếm
                     </button>
-                </div>
+                </form>
+                <script>
+                    $(document).ready(function() {
+                        // Handle Enter key in search input
+                        $('#searchKeyword').on('keypress', function(e) {
+                            if (e.which === 13) {
+                                e.preventDefault();
+                                $('#searchForm').submit();
+                            }
+                        });
+                        
+                        // Auto-focus search on homepage
+                        if (window.location.pathname === '/') {
+                            $('#searchKeyword').focus();
+                        }
+                    });
+                </script>
             </div>
             <div class="col-md-12 col-lg-5">
                 <div id="carouselId" class="carousel slide position-relative" data-bs-ride="carousel">

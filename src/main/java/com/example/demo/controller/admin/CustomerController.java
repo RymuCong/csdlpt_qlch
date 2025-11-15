@@ -4,7 +4,6 @@ import com.example.demo.domain.Customer;
 import com.example.demo.service.CustomerService;
 
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -22,13 +21,13 @@ public class CustomerController {
     
     private final CustomerService customerService;
 
-    @Autowired
     public CustomerController(CustomerService customerService) {
         this.customerService = customerService;
     }
     
     /**
      * Hiển thị danh sách khách hàng
+     * Trả về TẤT CẢ dữ liệu để DataTables xử lý phân trang ở client-side
      */
     @GetMapping
     public String showCustomers(Model model) {
@@ -129,9 +128,11 @@ public class CustomerController {
     
     /**
      * Lọc khách hàng theo level
+     * Trả về TẤT CẢ dữ liệu để DataTables xử lý phân trang ở client-side
      */
     @GetMapping("/filter")
-    public String filterByLevel(@RequestParam Byte level, Model model) {
+    public String filterByLevel(@RequestParam Byte level,
+                               Model model) {
         List<Customer> customers = customerService.getCustomersByLevel(level);
         model.addAttribute("customers", customers);
         model.addAttribute("selectedLevel", level);
@@ -140,6 +141,7 @@ public class CustomerController {
     
     /**
      * Top khách hàng VIP
+     * Trả về TẤT CẢ dữ liệu để DataTables xử lý phân trang ở client-side
      */
     @GetMapping("/top")
     public String showTopCustomers(Model model) {

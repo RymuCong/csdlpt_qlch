@@ -78,7 +78,7 @@
                                             <div>
                                                 <div class="text-white-75 small">Tổng doanh thu</div>
                                                 <div class="h4 mb-0">
-                                                    <fmt:formatNumber value="${totalRevenue}" type="currency" currencySymbol="₫" />
+                                                    <fmt:formatNumber value="${totalRevenue}" type="currency" currencySymbol="₫" maxFractionDigits="0" />
                                                 </div>
                                             </div>
                                             <div>
@@ -131,7 +131,7 @@
                                                 <div class="text-white-75 small">TB giá trị/HĐ</div>
                                                 <div class="h5 mb-0">
                                                     <c:if test="${bills.size() > 0}">
-                                                        <fmt:formatNumber value="${totalRevenue / bills.size()}" type="currency" currencySymbol="₫" />
+                                                        <fmt:formatNumber value="${totalRevenue / bills.size()}" type="currency" currencySymbol="₫" maxFractionDigits="0" />
                                                     </c:if>
                                                     <c:if test="${bills.size() == 0}">0 ₫</c:if>
                                                 </div>
@@ -155,7 +155,9 @@
                                 </span>
                             </div>
                             <div class="card-body">
-                                <canvas id="revenueChart" width="100%" height="30"></canvas>
+                                <div style="position: relative; height: 400px;">
+                                    <canvas id="revenueChart"></canvas>
+                                </div>
                             </div>
                         </div>
                         
@@ -203,7 +205,7 @@
                                                 </td>
                                                 <td>
                                                     <strong class="text-success">
-                                                        <fmt:formatNumber value="${bill.totalPrice}" type="currency" currencySymbol="₫" />
+                                                        <fmt:formatNumber value="${bill.totalPrice}" type="currency" currencySymbol="₫" maxFractionDigits="0" />
                                                     </strong>
                                                 </td>
                                                 <td>
@@ -239,7 +241,7 @@
                                             <td colspan="4" class="text-end"><strong>TỔNG CỘNG:</strong></td>
                                             <td colspan="4">
                                                 <strong class="text-success h5">
-                                                    <fmt:formatNumber value="${totalRevenue}" type="currency" currencySymbol="₫" />
+                                                    <fmt:formatNumber value="${totalRevenue}" type="currency" currencySymbol="₫" maxFractionDigits="0" />
                                                 </strong>
                                             </td>
                                         </tr>
@@ -278,6 +280,7 @@
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/scripts.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     
@@ -294,80 +297,125 @@
         
         // DataTable
         $(document).ready(function() {
-            $('#datatablesSimple').DataTable({
+            let table = $('#datatablesSimple').DataTable({
                 language: {
-                    url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/vi.json'
+                    url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/vi.json',
+                    search: "Tìm kiếm:",
+                    lengthMenu: "Hiển thị _MENU_ bản ghi",
+                    info: "Hiển thị _START_ đến _END_ trong tổng số _TOTAL_ bản ghi",
+                    infoEmpty: "Không có dữ liệu",
+                    infoFiltered: "(lọc từ _MAX_ tổng số bản ghi)",
+                    paginate: {
+                        first: "Đầu",
+                        last: "Cuối",
+                        next: "Sau",
+                        previous: "Trước"
+                    }
                 },
-                order: [[1, 'desc']] // Sắp xếp theo ngày giảm dần
+                order: [[1, 'desc']], // Sắp xếp theo ngày giảm dần
+                pageLength: 10,
+                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Tất cả"]],
+                responsive: true,
+                dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+                columnDefs: [
+                    { orderable: false, targets: 7 } // Cột "Thao tác" không sắp xếp được
+                ]
             });
         });
         
         // Revenue Chart
         <c:if test="${bills != null && bills.size() > 0}">
+        (function() {
             const revenueCtx = document.getElementById('revenueChart');
-            if (revenueCtx) {
-                // Group bills by date
-                const dailyRevenue = {};
-                <c:forEach var="bill" items="${bills}">
-                    const dateStr = '${bill.paymentDate}';
-                    const date = dateStr.substring(0, 10); // YYYY-MM-DD
-                    const revenue = ${bill.totalPrice};
+            if (!revenueCtx) {
+                console.error('Chart canvas element not found!');
+                return;
+            }
+            
+            // Group bills by date
+            const dailyRevenue = {};
+            <c:forEach var="bill" items="${bills}">
+            {
+                const dateStr = '<c:out value="${bill.paymentDate}" />';
+                // Extract date part (YYYY-MM-DD) from LocalDateTime string
+                const dateMatch = dateStr.match(/(\d{4}-\d{2}-\d{2})/);
+                if (dateMatch) {
+                    const date = dateMatch[1]; // YYYY-MM-DD
+                    const revenue = <fmt:formatNumber value="${bill.totalPrice}" type="number" groupingUsed="false" />;
                     
                     if (!dailyRevenue[date]) {
                         dailyRevenue[date] = 0;
                     }
                     dailyRevenue[date] += revenue;
-                </c:forEach>
-                
-                const dates = Object.keys(dailyRevenue).sort((a, b) => {
-                    const [dayA, monthA, yearA] = a.split('/');
-                    const [dayB, monthB, yearB] = b.split('/');
-                    return new Date(yearA, monthA - 1, dayA) - new Date(yearB, monthB - 1, dayB);
-                });
-                const revenues = dates.map(date => dailyRevenue[date]);
-                
-                new Chart(revenueCtx, {
-                    type: 'line',
-                    data: {
-                        labels: dates,
-                        datasets: [{
-                            label: 'Doanh thu (₫)',
-                            data: revenues,
-                            borderColor: 'rgba(25, 135, 84, 1)',
-                            backgroundColor: 'rgba(25, 135, 84, 0.1)',
-                            fill: true,
-                            tension: 0.4,
-                            pointRadius: 5,
-                            pointHoverRadius: 7
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    callback: function(value) {
-                                        return value.toLocaleString('vi-VN') + ' ₫';
-                                    }
+                }
+            }
+            </c:forEach>
+            
+            // Sort dates correctly (YYYY-MM-DD format)
+            const dates = Object.keys(dailyRevenue).sort(function(a, b) {
+                return new Date(a) - new Date(b);
+            });
+            
+            // Format dates for display (DD/MM/YYYY)
+            const formattedDates = dates.map(function(date) {
+                const parts = date.split('-');
+                return parts[2] + '/' + parts[1] + '/' + parts[0];
+            });
+            
+            const revenues = dates.map(function(date) {
+                return dailyRevenue[date];
+            });
+            
+            new Chart(revenueCtx, {
+                type: 'line',
+                data: {
+                    labels: formattedDates,
+                    datasets: [{
+                        label: 'Doanh thu (₫)',
+                        data: revenues,
+                        borderColor: 'rgba(25, 135, 84, 1)',
+                        backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString('vi-VN') + ' ₫';
                                 }
                             }
                         },
-                        plugins: {
-                            legend: {
-                                display: false
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        return 'Doanh thu: ' + context.parsed.y.toLocaleString('vi-VN') + ' ₫';
-                                    }
+                        x: {
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Doanh thu: ' + context.parsed.y.toLocaleString('vi-VN') + ' ₫';
                                 }
                             }
                         }
                     }
-                });
-            }
+                }
+            });
+        })();
         </c:if>
         
         // Export to Excel (simple implementation)

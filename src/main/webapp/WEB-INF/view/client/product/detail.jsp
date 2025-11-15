@@ -6,7 +6,7 @@
 
             <head>
                 <meta charset="utf-8">
-                <title> ${product.name} - Laptopshop</title>
+                <title> ${product.name} - Nhóm 3 CSDLPT</title>
                 <meta content="width=device-width, initial-scale=1.0" name="viewport">
                 <meta content="" name="keywords">
                 <meta content="" name="description">
@@ -61,18 +61,29 @@
                             <div class="col-lg-8 col-xl-9">
                                 <div class="row g-4">
                                     <div class="col-lg-6">
-                                        <div class="border rounded">
-                                            <a href="#">
-                                                <img src="/images/product/${product.image}" class="img-fluid rounded"
-                                                    alt="Image">
-                                            </a>
+                                        <div class="border rounded p-3 bg-light">
+                                            <c:choose>
+                                                <c:when test="${not empty product.image}">
+                                                    <img src="/images/product/${product.image}" 
+                                                         class="img-fluid rounded product-detail-image" 
+                                                         alt="${product.name}"
+                                                         style="max-height: 500px; width: 100%; object-fit: contain;"
+                                                         onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27500%27 height=%27500%27%3E%3Cdefs%3E%3ClinearGradient id=%27grad%27 x1=%270%25%27 y1=%270%25%27 x2=%27100%25%27 y2=%27100%25%27%3E%3Cstop offset=%270%25%27 style=%27stop-color:%23f0f0f0;stop-opacity:1%27 /%3E%3Cstop offset=%27100%25%27 style=%27stop-color:%23e0e0e0;stop-opacity:1%27 /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill=%27url(%23grad)%27 width=%27500%27 height=%27500%27/%3E%3Ctext fill=%27%23999%27 font-family=%27Arial, sans-serif%27 font-size=%2724%27 font-weight=%27bold%27 x=%2750%25%27 y=%2745%25%27 text-anchor=%27middle%27 dominant-baseline=%27middle%27%3E%3Ctspan x=%2750%25%27 dy=%27-15%27%3E🛍️%3C/tspan%3E%3Ctspan x=%2750%25%27 dy=%2730%27%3ENo Image%3C/tspan%3E%3C/text%3E%3C/svg%3E'">
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='500'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23f0f0f0;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23e0e0e0;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill='url(%23grad)' width='500' height='500'/%3E%3Ctext fill='%23999' font-family='Arial, sans-serif' font-size='24' font-weight='bold' x='50%25' y='45%25' text-anchor='middle' dominant-baseline='middle'%3E%3Ctspan x='50%25' dy='-15'%3E🛍️%3C/tspan%3E%3Ctspan x='50%25' dy='30'%3ENo Image%3C/tspan%3E%3C/text%3E%3C/svg%3E"
+                                                         class="img-fluid rounded product-detail-image" 
+                                                         alt="${product.name}"
+                                                         style="max-height: 500px; width: 100%; object-fit: contain;">
+                                                </c:otherwise>
+                                            </c:choose>
                                         </div>
                                     </div>
                                     <div class="col-lg-6">
                                         <h4 class="fw-bold mb-3"> ${product.name}</h4>
                                         <p class="mb-3">Danh mục: ${product.category.name}</p>
                                         <h5 class="fw-bold mb-3">
-                                            <fmt:formatNumber type="number" value="${product.price}" /> đ
+                                            <fmt:formatNumber type="number" value="${product.price}" maxFractionDigits="0" groupingUsed="true" /> đ
 
                                         </h5>
                                         <div class="d-flex mb-4">
@@ -85,7 +96,10 @@
                                         <p class="mb-4">
                                             <span class="badge bg-success">Còn hàng: ${product.quantity}</span>
                                             <c:if test="${product.expDate != null}">
-                                                <br/><small class="text-muted">Hạn sử dụng: ${product.expDate}</small>
+                                                <br/><small class="text-muted">Hạn sử dụng: 
+                                                    <c:set var="expDate" value="${product.expDate}" />
+                                                    ${expDate.dayOfMonth < 10 ? '0' : ''}${expDate.dayOfMonth}/${expDate.monthValue < 10 ? '0' : ''}${expDate.monthValue}/${expDate.year}
+                                                </small>
                                             </c:if>
                                         </p>
 
@@ -125,7 +139,9 @@
                                                     <strong>Giá:</strong> <fmt:formatNumber type="number" value="${product.price}" /> đ<br/>
                                                     <strong>Số lượng:</strong> ${product.quantity}<br/>
                                                     <c:if test="${product.expDate != null}">
-                                                        <strong>Hạn sử dụng:</strong> ${product.expDate}<br/>
+                                                        <strong>Hạn sử dụng:</strong> 
+                                                        <c:set var="expDateDetail" value="${product.expDate}" />
+                                                        ${expDateDetail.dayOfMonth < 10 ? '0' : ''}${expDateDetail.dayOfMonth}/${expDateDetail.monthValue < 10 ? '0' : ''}${expDateDetail.monthValue}/${expDateDetail.year}<br/>
                                                     </c:if>
                                                     <strong>Cửa hàng:</strong> ${product.store.id}
                                                 </p>

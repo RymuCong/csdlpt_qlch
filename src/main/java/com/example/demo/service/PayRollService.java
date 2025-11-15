@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -47,8 +46,10 @@ public class PayRollService {
             });
         
         // 2. Kiểm tra đã tồn tại bảng lương cho tháng này chưa
+        LocalDate startOfMonth = payRollDTO.getPayMonth().withDayOfMonth(1);
+        LocalDate startOfNextMonth = startOfMonth.plusMonths(1);
         if (payRollRepository.existsByEmployeeIdAndPayMonth(
-                payRollDTO.getEmployeeId(), payRollDTO.getPayMonth())) {
+                payRollDTO.getEmployeeId(), startOfMonth, startOfNextMonth)) {
             log.error("❌ Đã tồn tại bảng lương cho nhân viên {} trong tháng {}", 
                      payRollDTO.getEmployeeId(), payRollDTO.getPayMonth());
             throw new IllegalStateException("Đã tồn tại bảng lương cho nhân viên trong tháng này");
@@ -57,7 +58,9 @@ public class PayRollService {
         // 3. Tạo PayRoll entity
         PayRoll payRoll = new PayRoll();
         String storeId = employee.getStore().getId();
-        long payRollCount = payRollRepository.findByStoreIdAndPayMonth(storeId, payRollDTO.getPayMonth()).size();
+        LocalDate startOfMonthForCount = payRollDTO.getPayMonth().withDayOfMonth(1);
+        LocalDate startOfNextMonthForCount = startOfMonthForCount.plusMonths(1);
+        long payRollCount = payRollRepository.findByStoreIdAndPayMonth(storeId, startOfMonthForCount, startOfNextMonthForCount).size();
         payRoll.setPayId(idGenerator.generatePayRollId(storeId, payRollDTO.getPayMonth(), payRollCount));
         payRoll.setEmployee(employee);
         payRoll.setPayMonth(payRollDTO.getPayMonth());
@@ -120,9 +123,12 @@ public class PayRollService {
         List<Employee> employees = employeeRepository.findByStoreId(storeId);
         List<PayRoll> payRolls = new ArrayList<>();
         
+        LocalDate startOfMonth = payMonth.withDayOfMonth(1);
+        LocalDate startOfNextMonth = startOfMonth.plusMonths(1);
+        
         for (Employee employee : employees) {
             // Kiểm tra đã có bảng lương chưa
-            if (!payRollRepository.existsByEmployeeIdAndPayMonth(employee.getId(), payMonth)) {
+            if (!payRollRepository.existsByEmployeeIdAndPayMonth(employee.getId(), startOfMonth, startOfNextMonth)) {
                 PayRollDTO dto = new PayRollDTO();
                 dto.setEmployeeId(employee.getId());
                 dto.setPayMonth(payMonth);
@@ -171,6 +177,13 @@ public class PayRollService {
     }
     
     /**
+     * Lấy bảng lương theo cửa hàng (tất cả tháng)
+     */
+    public List<PayRoll> getPayRollsByStore(String storeId) {
+        return payRollRepository.findByStoreId(storeId);
+    }
+    
+    /**
      * Lấy bảng lương theo nhân viên
      */
     public List<PayRoll> getPayRollsByEmployee(String employeeId) {
@@ -181,42 +194,62 @@ public class PayRollService {
      * Lấy bảng lương theo nhân viên và tháng
      */
     public Optional<PayRoll> getPayRollByEmployeeAndMonth(String employeeId, LocalDate payMonth) {
-        return payRollRepository.findByEmployeeIdAndPayMonth(employeeId, payMonth);
+        LocalDate startOfMonth = payMonth.withDayOfMonth(1);
+        LocalDate startOfNextMonth = startOfMonth.plusMonths(1);
+        return payRollRepository.findByEmployeeIdAndPayMonth(employeeId, startOfMonth, startOfNextMonth);
     }
     
     /**
      * Lấy bảng lương theo cửa hàng và tháng
      */
     public List<PayRoll> getPayRollsByStoreAndMonth(String storeId, LocalDate payMonth) {
-        return payRollRepository.findByStoreIdAndPayMonth(storeId, payMonth);
+        LocalDate startOfMonth = payMonth.withDayOfMonth(1);
+        LocalDate startOfNextMonth = startOfMonth.plusMonths(1);
+        log.debug("🔍 Tìm bảng lương cho store: {}, tháng: {} (từ {} đến {})", 
+                 storeId, payMonth, startOfMonth, startOfNextMonth);
+        List<PayRoll> result = payRollRepository.findByStoreIdAndPayMonth(storeId, startOfMonth, startOfNextMonth);
+        log.debug("✅ Tìm thấy {} bảng lương", result.size());
+        return result;
     }
     
     /**
      * Lấy bảng lương theo tháng
      */
     public List<PayRoll> getPayRollsByMonth(LocalDate payMonth) {
-        return payRollRepository.findByPayMonth(payMonth);
+        LocalDate startOfMonth = payMonth.withDayOfMonth(1);
+        LocalDate startOfNextMonth = startOfMonth.plusMonths(1);
+        log.debug("🔍 Tìm bảng lương cho tháng: {} (từ {} đến {})", 
+                 payMonth, startOfMonth, startOfNextMonth);
+        List<PayRoll> result = payRollRepository.findByPayMonth(startOfMonth, startOfNextMonth);
+        log.debug("✅ Tìm thấy {} bảng lương", result.size());
+        return result;
     }
     
     /**
      * Tính tổng lương của cửa hàng theo tháng
      */
     public Long calculateTotalPayrollByStore(String storeId, LocalDate payMonth) {
-        return payRollRepository.calculateTotalPayrollByStoreAndMonth(storeId, payMonth);
+        LocalDate startOfMonth = payMonth.withDayOfMonth(1);
+        LocalDate startOfNextMonth = startOfMonth.plusMonths(1);
+        return payRollRepository.calculateTotalPayrollByStoreAndMonth(storeId, startOfMonth, startOfNextMonth);
     }
     
     /**
      * Tính tổng lương của tất cả cửa hàng theo tháng
      */
     public Long calculateTotalPayrollByMonth(LocalDate payMonth) {
-        return payRollRepository.calculateTotalPayrollByMonth(payMonth);
+        LocalDate startOfMonth = payMonth.withDayOfMonth(1);
+        LocalDate startOfNextMonth = startOfMonth.plusMonths(1);
+        return payRollRepository.calculateTotalPayrollByMonth(startOfMonth, startOfNextMonth);
     }
     
     /**
      * Lấy danh sách nhân viên có lương cao nhất trong tháng
      */
     public List<PayRoll> getTopEarnersByMonth(LocalDate payMonth) {
-        return payRollRepository.findTopEarnersByMonth(payMonth);
+        LocalDate startOfMonth = payMonth.withDayOfMonth(1);
+        LocalDate startOfNextMonth = startOfMonth.plusMonths(1);
+        return payRollRepository.findTopEarnersByMonth(startOfMonth, startOfNextMonth);
     }
     
     /**
@@ -272,6 +305,20 @@ public class PayRollService {
         estimate.setTotalSalary(totalSalary);
         
         return estimate;
+    }
+    
+    /**
+     * Lấy danh sách các tháng có dữ liệu bảng lương (tất cả store)
+     */
+    public List<LocalDate> getAvailableMonths() {
+        return payRollRepository.findDistinctPayMonths();
+    }
+    
+    /**
+     * Lấy danh sách các tháng có dữ liệu bảng lương theo store
+     */
+    public List<LocalDate> getAvailableMonthsByStore(String storeId) {
+        return payRollRepository.findDistinctPayMonthsByStore(storeId);
     }
     
     // ============= DTOs =============

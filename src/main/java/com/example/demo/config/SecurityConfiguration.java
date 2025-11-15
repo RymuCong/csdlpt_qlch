@@ -72,13 +72,21 @@ public class SecurityConfiguration {
                                 DispatcherType.INCLUDE)
                         .permitAll()
 
-                        .requestMatchers("/", "/login", "/client/**", "/css/**", "/js/**", "/images/**", "/product/**", "/resources/**")
+                        .requestMatchers("/", "/login", "/access-deny", "/client/**", "/css/**", "/js/**", "/images/**", "/product/**", "/resources/**")
                         .permitAll()
 
                         // Employee create/update/delete - chỉ ADMIN mới có quyền
                         .requestMatchers("/admin/employee/create", "/admin/employee/create/**", 
                                         "/admin/employee/update/**", "/admin/employee/delete/**")
                         .hasRole("ADMIN")
+                        
+                        // Admin Dashboard - KHO cần truy cập để xem layout
+                        .requestMatchers("/admin", "/admin/")
+                        .hasAnyRole("ADMIN", "QUAN_LY", "KE_TOAN", "KHO")
+                        
+                        // Product management routes - KHO (Warehouse) có quyền truy cập
+                        .requestMatchers("/admin/product/**", "/admin/product")
+                        .hasAnyRole("ADMIN", "QUAN_LY", "KE_TOAN", "KHO")
                         
                         // Admin routes - ADMIN, QUAN_LY (Manager) và KE_TOAN có quyền truy cập
                         .requestMatchers("/admin/**").hasAnyRole("ADMIN", "QUAN_LY", "KE_TOAN")

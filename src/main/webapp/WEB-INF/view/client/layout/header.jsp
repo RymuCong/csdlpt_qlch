@@ -5,8 +5,8 @@
             <div class="container px-0">
                 <nav class="navbar navbar-light bg-white navbar-expand-xl">
                     <a href="/" class="navbar-brand">
-                        <h1 class="text-primary display-6">
-                            <i class="fas fa-store-alt me-2"></i>MiniMart Plus
+                        <h1 class="text-danger display-6 fw-bold">
+                            <i class="fas fa-store-alt me-2"></i>RedMart
                         </h1>
                     </a>
                     <button class="navbar-toggler py-2 px-3" type="button" data-bs-toggle="collapse"
@@ -21,11 +21,14 @@
                         </div>
                         <div class="d-flex m-3 me-0">
                             <c:if test="${not empty pageContext.request.userPrincipal}">
-                                <!-- POS System - No cart needed -->
+                                <!-- POS System - Chỉ hiển thị cho BAN_HANG, QUAN_LY, ADMIN -->
                                 <c:if test="${not empty sessionScope.employeeId}">
-                                    <a href="/admin/bill/create" class="position-relative me-4 my-auto" title="Tạo hóa đơn (POS)">
-                                        <i class="fa fa-cash-register fa-2x text-success"></i>
-                                    </a>
+                                    <c:set var="position" value="${sessionScope.employeePosition}" />
+                                    <c:if test="${position == 'BAN_HANG' || position == 'QUAN_LY' || position == 'ADMIN'}">
+                                        <a href="/admin/bill/create" class="position-relative me-4 my-auto" title="Tạo hóa đơn (POS)">
+                                            <i class="fa fa-cash-register fa-2x text-success"></i>
+                                        </a>
+                                    </c:if>
                                 </c:if>
                                 <div class="dropdown my-auto">
                                     <a href="#" class="dropdown" role="button" id="dropdownMenuLink"
@@ -55,8 +58,27 @@
                                         </li>
 
                                         <c:if test="${not empty sessionScope.employeeId}">
-                                            <li><a class="dropdown-item" href="/admin"><i class="fas fa-tachometer-alt me-2"></i>Hệ thống quản lý</a></li>
-                                            <li><a class="dropdown-item" href="/admin/bill"><i class="fas fa-file-invoice me-2"></i>Hóa đơn</a></li>
+                                            <c:set var="position" value="${sessionScope.employeePosition}" />
+                                            
+                                            <!-- Hệ thống quản lý - ADMIN, QUAN_LY, KE_TOAN, KHO -->
+                                            <c:if test="${position == 'ADMIN' || position == 'QUAN_LY' || position == 'KE_TOAN' || position == 'KHO'}">
+                                                <li><a class="dropdown-item" href="/admin"><i class="fas fa-tachometer-alt me-2"></i>Hệ thống quản lý</a></li>
+                                            </c:if>
+                                            
+                                            <!-- Quản lý sản phẩm - ADMIN, QUAN_LY, KE_TOAN, KHO -->
+                                            <c:if test="${position == 'ADMIN' || position == 'QUAN_LY' || position == 'KE_TOAN' || position == 'KHO'}">
+                                                <li><a class="dropdown-item" href="/admin/product"><i class="fas fa-boxes me-2"></i>Quản lý sản phẩm</a></li>
+                                            </c:if>
+                                            
+                                            <!-- Hóa đơn - ADMIN, QUAN_LY, KE_TOAN (KHO không có quyền) -->
+                                            <c:if test="${position == 'ADMIN' || position == 'QUAN_LY' || position == 'KE_TOAN'}">
+                                                <li><a class="dropdown-item" href="/admin/bill"><i class="fas fa-file-invoice me-2"></i>Hóa đơn</a></li>
+                                            </c:if>
+                                            
+                                            <!-- Tạo hóa đơn (POS) - BAN_HANG, QUAN_LY, ADMIN -->
+                                            <c:if test="${position == 'BAN_HANG' || position == 'QUAN_LY' || position == 'ADMIN'}">
+                                                <li><a class="dropdown-item" href="/admin/bill/create"><i class="fas fa-cash-register me-2 text-success"></i>Tạo hóa đơn (POS)</a></li>
+                                            </c:if>
                                         </c:if>
                                         <li>
                                             <hr class="dropdown-divider">

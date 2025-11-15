@@ -74,7 +74,7 @@
                                                         <h6 class="card-title">${product.name}</h6>
                                                         <p class="card-text">
                                                             <strong>
-                                                                <fmt:formatNumber value="${product.price}" type="currency" currencySymbol="₫" />
+                                                                <fmt:formatNumber value="${product.price}" type="currency" currencySymbol="₫" maxFractionDigits="0" />
                                                             </strong>
                                                         </p>
                                                         <c:choose>

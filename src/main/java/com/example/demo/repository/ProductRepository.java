@@ -81,11 +81,17 @@ public interface ProductRepository extends JpaRepository<Product, String>, JpaSp
                                    @Param("storeId") String storeId);
     
     /**
-     * Tìm sản phẩm theo tên (tìm kiếm gần đúng)
+     * Tìm sản phẩm theo tên (tìm kiếm gần đúng) - với storeId
      */
     @Query("SELECT p FROM Product p WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) AND p.store.id = :storeId")
     List<Product> searchByName(@Param("keyword") String keyword, 
                                @Param("storeId") String storeId);
+    
+    /**
+     * Tìm sản phẩm theo tên (tìm kiếm gần đúng) - tất cả sản phẩm (cho client)
+     */
+    @Query("SELECT p FROM Product p WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))")
+    List<Product> searchByNameAll(@Param("keyword") String keyword);
     
     /**
      * Đếm số lượng sản phẩm theo cửa hàng
@@ -104,5 +110,17 @@ public interface ProductRepository extends JpaRepository<Product, String>, JpaSp
      */
     @Query("SELECT COALESCE(SUM(p.price * p.quantity), 0) FROM Product p WHERE p.store.id = :storeId")
     BigDecimal calculateInventoryValue(@Param("storeId") String storeId);
+    
+    /**
+     * Tính tổng số lượng (tổng quantity) theo cửa hàng
+     */
+    @Query("SELECT COALESCE(SUM(p.quantity), 0) FROM Product p WHERE p.store.id = :storeId")
+    Long calculateTotalQuantity(@Param("storeId") String storeId);
+    
+    /**
+     * Lấy sản phẩm mới nhất (sắp xếp theo createdDate giảm dần)
+     */
+    @Query("SELECT p FROM Product p ORDER BY p.createdDate DESC")
+    List<Product> findNewestProducts(Pageable pageable);
 }
 

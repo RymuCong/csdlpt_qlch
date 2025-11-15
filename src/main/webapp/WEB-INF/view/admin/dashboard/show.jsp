@@ -103,7 +103,7 @@
                                             <div>
                                                 <div class="small">Doanh thu hôm nay</div>
                                                 <div class="h5 mb-0">
-                                                    <fmt:formatNumber value="${dailyRevenue.revenue}" type="currency" currencySymbol="₫" />
+                                                    <fmt:formatNumber value="${dailyRevenue.revenue}" type="currency" currencySymbol="₫" maxFractionDigits="0" />
                                                 </div>
                                             </div>
                                             <div><i class="fas fa-dollar-sign fa-3x opacity-50"></i></div>
@@ -129,7 +129,7 @@
                                         <div class="card-body">
                                             <h4>Tổng số hóa đơn: <span class="badge bg-success">${dailyRevenue.billCount}</span></h4>
                                             <h5>Giá trị trung bình: 
-                                                <fmt:formatNumber value="${dailyRevenue.averageOrderValue}" type="currency" currencySymbol="₫" />
+                                                <fmt:formatNumber value="${dailyRevenue.averageOrderValue}" type="currency" currencySymbol="₫" maxFractionDigits="0" />
                                             </h5>
                                         </div>
                                     </div>

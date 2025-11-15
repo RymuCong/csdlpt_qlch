@@ -3,11 +3,8 @@ package com.example.demo.controller.client;
 import com.example.demo.domain.Product;
 import com.example.demo.service.ProductService;
 import com.example.demo.service.CategoryService;
+import com.example.demo.service.StoreService;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Home Page Controller - Trang chủ khách hàng
@@ -27,73 +25,60 @@ public class HomePageController {
     
     private final ProductService productService;
     private final CategoryService categoryService;
+    private final StoreService storeService;
 
-    @Autowired
-    public HomePageController(ProductService productService, CategoryService categoryService) {
+    public HomePageController(ProductService productService, CategoryService categoryService, StoreService storeService) {
         this.productService = productService;
         this.categoryService = categoryService;
+        this.storeService = storeService;
     }
 
     /**
-     * Trang chủ - Hiển thị sản phẩm
+     * Trang chủ - Hiển thị sản phẩm mới nhất (8-12 sản phẩm)
      */
     @GetMapping("/")
-    public String showHomePage(Model model, 
-                              @RequestParam("page") Optional<String> pageOptional) {
-        int page = 1;
-        try {
-            if (pageOptional.isPresent()) {
-                page = Integer.parseInt(pageOptional.get());
-            }
-        } catch (Exception e) {
-            // Use default page
-        }
+    public String showHomePage(Model model) {
+        // Lấy 12 sản phẩm mới nhất cho trang chủ
+        List<Product> products = productService.getNewestProducts(12);
         
-        Pageable pageable = PageRequest.of(page - 1, 12);
-        Page<Product> productsPage = productService.getAllProducts(pageable);
-        
-        model.addAttribute("products", productsPage.getContent());
-        model.addAttribute("currentPage", page);
-        model.addAttribute("totalPages", productsPage.getTotalPages());
+        model.addAttribute("products", products);
         model.addAttribute("categories", categoryService.getAllCategories());
+        model.addAttribute("stores", storeService.getAllStores());
         
         return "client/homepage/show";
     }
 
     /**
      * Lọc sản phẩm theo danh mục
+     * Trả về TẤT CẢ sản phẩm để client-side filtering và pagination
      */
     @GetMapping("/products")
     public String showProducts(@RequestParam(required = false) String categoryId,
+                              @RequestParam(required = false) String keyword,
                               @RequestParam("page") Optional<String> pageOptional,
                               Model model) {
-        int page = 1;
-        try {
-            if (pageOptional.isPresent()) {
-                page = Integer.parseInt(pageOptional.get());
+        // Lấy tất cả sản phẩm để client-side filtering
+        List<Product> allProducts;
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            // Nếu có keyword, search trước
+            allProducts = productService.searchProductsAll(keyword.trim());
+            // Sau đó filter theo category nếu có
+            if (categoryId != null && !categoryId.isEmpty()) {
+                allProducts = allProducts.stream()
+                    .filter(p -> p.getCategory() != null && p.getCategory().getId().equals(categoryId))
+                    .collect(Collectors.toList());
             }
-        } catch (Exception e) {
-            // Use default page
-        }
-        
-        Pageable pageable = PageRequest.of(page - 1, 12);
-        
-        List<Product> products;
-        int totalPages;
-        if (categoryId != null && !categoryId.isEmpty()) {
-            products = productService.getProductsByCategory(categoryId);
-            totalPages = (int) Math.ceil((double) products.size() / 12);
+        } else if (categoryId != null && !categoryId.isEmpty()) {
+            allProducts = productService.getProductsByCategory(categoryId);
         } else {
-            Page<Product> productPage = productService.getAllProducts(pageable);
-            products = productPage.getContent();
-            totalPages = productPage.getTotalPages();
+            allProducts = productService.getAllProducts();
         }
         
-        model.addAttribute("products", products);
-        model.addAttribute("currentPage", page);
-        model.addAttribute("totalPages", totalPages);
+        model.addAttribute("products", allProducts);
         model.addAttribute("categories", categoryService.getAllCategories());
         model.addAttribute("selectedCategory", categoryId);
+        model.addAttribute("searchKeyword", keyword);
+        model.addAttribute("stores", storeService.getAllStores());
         
         return "client/product/show";
     }
@@ -101,7 +86,7 @@ public class HomePageController {
     /**
      * Chi tiết sản phẩm
      */
-    @GetMapping("/product-detail/{id}")
+    @GetMapping("/product/{id}")
     public String showProductDetail(@PathVariable String id, Model model) {
         Optional<Product> product = productService.getProductById(id);
         if (product.isEmpty()) {
@@ -109,6 +94,36 @@ public class HomePageController {
         }
         
         model.addAttribute("product", product.get());
+        model.addAttribute("stores", storeService.getAllStores());
         return "client/product/detail";
+    }
+    
+    /**
+     * Chi tiết sản phẩm (alias cho /product/{id})
+     */
+    @GetMapping("/product-detail/{id}")
+    public String showProductDetailAlias(@PathVariable String id, Model model) {
+        return showProductDetail(id, model);
+    }
+    
+    /**
+     * Tìm kiếm sản phẩm
+     */
+    @GetMapping("/search")
+    public String searchProducts(@RequestParam(required = false) String keyword,
+                                Model model) {
+        List<Product> products;
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            products = productService.searchProductsAll(keyword.trim());
+        } else {
+            products = productService.getAllProducts();
+        }
+        
+        model.addAttribute("products", products);
+        model.addAttribute("categories", categoryService.getAllCategories());
+        model.addAttribute("stores", storeService.getAllStores());
+        model.addAttribute("searchKeyword", keyword);
+        
+        return "client/product/show";
     }
 }
