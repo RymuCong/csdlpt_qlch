@@ -72,7 +72,12 @@ public class SecurityConfiguration {
                                 DispatcherType.INCLUDE)
                         .permitAll()
 
-                        .requestMatchers("/", "/login", "/access-deny", "/client/**", "/css/**", "/js/**", "/images/**", "/product/**", "/resources/**")
+                        // Client-side public routes - cho phép truy cập không cần đăng nhập
+                        .requestMatchers("/", "/login", "/access-deny", "/register", "/error",
+                                        "/products", "/products/**", 
+                                        "/product/**", "/product-detail/**",
+                                        "/search", "/search/**",
+                                        "/client/**", "/css/**", "/js/**", "/images/**", "/resources/**")
                         .permitAll()
 
                         // Employee create/update/delete - chỉ ADMIN mới có quyền

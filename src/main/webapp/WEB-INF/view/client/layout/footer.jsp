@@ -123,10 +123,7 @@
                 </span>
             </div>
             <div class="col-md-6 my-auto text-center text-md-end text-white">
-                <!--/*** This template is free as long as you keep the below author’s credit link/attribution link/backlink. ***/-->
-                <!--/*** If you'd like to use the template without the below author’s credit link/attribution link/backlink, ***/-->
-                <!--/*** you can purchase the Credit Removal License from "https://htmlcodex.com/credit-removal". ***/-->
-                Thiết kế bởi <a class="border-bottom" href="https://htmlcodex.com">HTML Codex</a> Cung cấp bởi <a class="border-bottom" href="https://themewagon.com">ThemeWagon</a>
+                Phát triển bởi <a class="border-bottom text-danger" href="#">Đội ngũ RedMart</a>
             </div>
         </div>
     </div>
