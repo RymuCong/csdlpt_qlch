@@ -27,8 +27,40 @@ public class CustomerService {
     }
     
     /**
-     * Tạo khách hàng mới
+     * Tạo khách hàng mới (với storeId để generate ID theo chi nhánh)
      */
+    public Customer createCustomer(Customer customer, String storeId) {
+        // Kiểm tra số điện thoại đã tồn tại chưa
+        if (customerRepository.existsByPhone(customer.getPhone())) {
+            log.error("❌ Số điện thoại khách hàng đã tồn tại: {}", customer.getPhone());
+            throw new IllegalArgumentException("Số điện thoại khách hàng đã tồn tại");
+        }
+        
+        // Tự động sinh mã khách hàng theo chi nhánh
+        String storeIdPrefix = storeId + "_CUS%";
+        long customerCount = customerRepository.countByStoreIdPrefix(storeIdPrefix);
+        customer.setId(idGenerator.generateCustomerId(storeId, customerCount));
+        
+        // Khởi tạo totalPayment = 0 nếu chưa có
+        if (customer.getTotalPayment() == null) {
+            customer.setTotalPayment(BigDecimal.ZERO);
+        }
+        
+        // Tự động tính level dựa trên tổng chi tiêu
+        Byte calculatedLevel = calculateCustomerLevel(customer.getTotalPayment());
+        customer.setLevel(calculatedLevel);
+        
+        Customer savedCustomer = customerRepository.save(customer);
+        log.info("✅ Tạo khách hàng thành công: {} - {} - Level {} (Chi tiêu: {})", 
+                 savedCustomer.getId(), savedCustomer.getName(), savedCustomer.getLevel(), savedCustomer.getTotalPayment());
+        return savedCustomer;
+    }
+    
+    /**
+     * Tạo khách hàng mới (backward compatibility - không có storeId, dùng format cũ)
+     * @deprecated Sử dụng createCustomer(Customer, String storeId) thay thế
+     */
+    @Deprecated
     public Customer createCustomer(Customer customer) {
         // Kiểm tra số điện thoại đã tồn tại chưa
         if (customerRepository.existsByPhone(customer.getPhone())) {
@@ -36,7 +68,7 @@ public class CustomerService {
             throw new IllegalArgumentException("Số điện thoại khách hàng đã tồn tại");
         }
         
-        // Tự động sinh mã khách hàng
+        // Tự động sinh mã khách hàng (format cũ)
         long customerCount = customerRepository.count();
         customer.setId(idGenerator.generateCustomerId(customerCount));
         

@@ -22,11 +22,21 @@ public class IdGenerator {
     }
     
     /**
-     * Generate Customer ID: CUS0001, CUS0002, ...
+     * Generate Customer ID: CUS0001, CUS0002, ... (deprecated - dùng cho backward compatibility)
      * Format: CUS + 4 số tự động tăng
      */
+    @Deprecated
     public String generateCustomerId(long currentCount) {
         return String.format("CUS%04d", currentCount + 1);
+    }
+    
+    /**
+     * Generate Customer ID theo chi nhánh: {storeId}_CUS0001, {storeId}_CUS0002, ...
+     * Format: {storeId}_CUS + 4 số tự động tăng
+     * Ví dụ: CN02_CUS0021
+     */
+    public String generateCustomerId(String storeId, long currentCount) {
+        return String.format("%s_CUS%04d", storeId, currentCount + 1);
     }
     
     /**

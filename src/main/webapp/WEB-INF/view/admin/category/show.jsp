@@ -37,9 +37,11 @@
                                     Danh sách danh mục
                                 </div>
                                 <div class="col-md-6 text-end">
-                                    <a href="/admin/category/create" class="btn btn-primary btn-sm">
-                                        <i class="fas fa-plus me-1"></i>Thêm danh mục
-                                    </a>
+                                    <c:if test="${sessionScope.employeePosition == 'ADMIN'}">
+                                        <a href="/admin/category/create" class="btn btn-primary btn-sm">
+                                            <i class="fas fa-plus me-1"></i>Thêm danh mục
+                                        </a>
+                                    </c:if>
                                 </div>
                             </div>
                         </div>
@@ -64,12 +66,14 @@
                                                 <a href="/admin/category/${category.id}" class="btn btn-info btn-sm" title="Chi tiết">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
-                                                <a href="/admin/category/update/${category.id}" class="btn btn-warning btn-sm" title="Sửa">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-                                                <a href="/admin/category/delete/${category.id}" class="btn btn-danger btn-sm" title="Xóa">
-                                                    <i class="fas fa-trash"></i>
-                                                </a>
+                                                <c:if test="${sessionScope.employeePosition == 'ADMIN'}">
+                                                    <a href="/admin/category/update/${category.id}" class="btn btn-warning btn-sm" title="Sửa">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <a href="/admin/category/delete/${category.id}" class="btn btn-danger btn-sm" title="Xóa">
+                                                        <i class="fas fa-trash"></i>
+                                                    </a>
+                                                </c:if>
                                             </td>
                                         </tr>
                                     </c:forEach>

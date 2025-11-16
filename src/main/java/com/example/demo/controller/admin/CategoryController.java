@@ -66,13 +66,15 @@ public class CategoryController {
      * Hiển thị chi tiết danh mục
      */
     @GetMapping("/{id}")
-    public String showCategoryDetail(@PathVariable String id, Model model) {
+    public String showCategoryDetail(@PathVariable String id, Model model, jakarta.servlet.http.HttpSession session) {
         Optional<Category> category = categoryService.getCategoryById(id);
         if (category.isEmpty()) {
             return "common/error-page";
         }
         
-        Long productCount = categoryService.countProductsInCategory(id);
+        // Lấy storeId từ session để đếm sản phẩm theo chi nhánh
+        String storeId = (String) session.getAttribute("storeId");
+        Long productCount = categoryService.countProductsInCategoryByStore(id, storeId);
         
         model.addAttribute("category", category.get());
         model.addAttribute("productCount", productCount);

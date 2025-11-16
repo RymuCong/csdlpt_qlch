@@ -34,21 +34,16 @@
                                     <form:form method="post" action="/admin/category/create" 
                                               modelAttribute="newCategory" class="row">
                                         
-                                        <!-- ID danh mục -->
-                                        <div class="mb-3 col-12">
-                                            <label class="form-label">Mã danh mục:</label>
-                                            <form:input type="text" class="form-control" path="id" 
-                                                       placeholder="VD: DM01" required="required" />
-                                            <form:errors path="id" cssClass="text-danger" />
-                                            <small class="form-text text-muted">Mã danh mục duy nhất (VD: DM01, DM02)</small>
-                                        </div>
-                                        
                                         <!-- Tên danh mục -->
                                         <div class="mb-3 col-12">
-                                            <label class="form-label">Tên danh mục:</label>
+                                            <label class="form-label">
+                                                <i class="fas fa-tag me-1"></i>Tên danh mục:
+                                                <span class="text-danger">*</span>
+                                            </label>
                                             <form:input type="text" class="form-control" path="name" 
-                                                       placeholder="VD: Đồ uống" required="required" />
+                                                       placeholder="VD: Đồ uống, Thực phẩm..." required="required" />
                                             <form:errors path="name" cssClass="text-danger" />
+                                            <small class="form-text text-muted">Mã danh mục sẽ được tự động tạo (VD: CAT001, CAT002...)</small>
                                         </div>
                                         
                                         <!-- Error message -->

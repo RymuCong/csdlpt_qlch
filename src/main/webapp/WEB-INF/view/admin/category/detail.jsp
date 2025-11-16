@@ -46,18 +46,23 @@
                                                 <td>
                                                     <span class="badge bg-success fs-6">${productCount}</span>
                                                     sản phẩm
+                                                    <c:if test="${not empty sessionScope.storeId}">
+                                                        <br/><small class="text-muted">(trong chi nhánh ${sessionScope.storeId})</small>
+                                                    </c:if>
                                                 </td>
                                             </tr>
                                         </tbody>
                                     </table>
                                 </div>
                                 <div class="card-footer">
-                                    <a href="/admin/category/update/${category.id}" class="btn btn-warning btn-sm">
-                                        <i class="fas fa-edit me-1"></i>Chỉnh sửa
-                                    </a>
-                                    <a href="/admin/category/delete/${category.id}" class="btn btn-danger btn-sm">
-                                        <i class="fas fa-trash me-1"></i>Xóa
-                                    </a>
+                                    <c:if test="${sessionScope.employeePosition == 'ADMIN'}">
+                                        <a href="/admin/category/update/${category.id}" class="btn btn-warning btn-sm">
+                                            <i class="fas fa-edit me-1"></i>Chỉnh sửa
+                                        </a>
+                                        <a href="/admin/category/delete/${category.id}" class="btn btn-danger btn-sm">
+                                            <i class="fas fa-trash me-1"></i>Xóa
+                                        </a>
+                                    </c:if>
                                     <a href="/admin/category" class="btn btn-secondary btn-sm">
                                         <i class="fas fa-arrow-left me-1"></i>Quay lại
                                     </a>

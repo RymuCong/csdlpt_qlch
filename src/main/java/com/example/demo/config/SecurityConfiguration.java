@@ -80,6 +80,15 @@ public class SecurityConfiguration {
                                         "/admin/employee/update/**", "/admin/employee/delete/**")
                         .hasRole("ADMIN")
                         
+                        // Category create/update/delete - chỉ ADMIN mới có quyền
+                        .requestMatchers("/admin/category/create", "/admin/category/create/**",
+                                        "/admin/category/update/**", "/admin/category/delete/**")
+                        .hasRole("ADMIN")
+                        
+                        // Category view - tất cả role có quyền xem
+                        .requestMatchers("/admin/category", "/admin/category/**")
+                        .hasAnyRole("ADMIN", "QUAN_LY", "KE_TOAN", "KHO")
+                        
                         // Admin Dashboard - KHO cần truy cập để xem layout
                         .requestMatchers("/admin", "/admin/")
                         .hasAnyRole("ADMIN", "QUAN_LY", "KE_TOAN", "KHO")

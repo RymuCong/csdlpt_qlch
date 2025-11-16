@@ -26,6 +26,61 @@ public class CustomerController {
     }
     
     /**
+     * Tạo nhanh khách hàng từ màn POS (AJAX)
+     */
+    @PostMapping("/quick-create")
+    @ResponseBody
+    public QuickCreateResponse quickCreate(@RequestBody Customer payload, jakarta.servlet.http.HttpSession session) {
+        try {
+            // Lấy storeId từ session
+            String storeId = (String) session.getAttribute("storeId");
+            if (storeId == null || storeId.isEmpty()) {
+                return QuickCreateResponse.failure("Không tìm thấy thông tin chi nhánh. Vui lòng đăng nhập lại.");
+            }
+            
+            // Chỉ cần name, phone; các field khác service sẽ tính mặc định
+            Customer minimal = new Customer();
+            minimal.setName(payload.getName());
+            minimal.setPhone(payload.getPhone());
+            Customer created = customerService.createCustomer(minimal, storeId);
+            return QuickCreateResponse.success(created.getId(), created.getName(), created.getPhone(), created.getLevel());
+        } catch (Exception e) {
+            return QuickCreateResponse.failure(e.getMessage());
+        }
+    }
+    
+    public static class QuickCreateResponse {
+        private boolean success;
+        private String message;
+        private String id;
+        private String name;
+        private String phone;
+        private Byte level;
+
+        public static QuickCreateResponse success(String id, String name, String phone, Byte level) {
+            QuickCreateResponse r = new QuickCreateResponse();
+            r.success = true;
+            r.id = id;
+            r.name = name;
+            r.phone = phone;
+            r.level = level;
+            return r;
+        }
+        public static QuickCreateResponse failure(String message) {
+            QuickCreateResponse r = new QuickCreateResponse();
+            r.success = false;
+            r.message = message;
+            return r;
+        }
+        public boolean isSuccess() { return success; }
+        public String getMessage() { return message; }
+        public String getId() { return id; }
+        public String getName() { return name; }
+        public String getPhone() { return phone; }
+        public Byte getLevel() { return level; }
+    }
+    
+    /**
      * Hiển thị danh sách khách hàng
      * Trả về TẤT CẢ dữ liệu để DataTables xử lý phân trang ở client-side
      */
@@ -51,13 +106,21 @@ public class CustomerController {
     @PostMapping("/create")
     public String createCustomer(@ModelAttribute("newCustomer") @Valid Customer customer,
                                  BindingResult bindingResult,
-                                 Model model) {
+                                 Model model,
+                                 jakarta.servlet.http.HttpSession session) {
         if (bindingResult.hasErrors()) {
             return "admin/customer/create";
         }
         
         try {
-            customerService.createCustomer(customer);
+            // Lấy storeId từ session
+            String storeId = (String) session.getAttribute("storeId");
+            if (storeId == null || storeId.isEmpty()) {
+                model.addAttribute("error", "Không tìm thấy thông tin chi nhánh. Vui lòng đăng nhập lại.");
+                return "admin/customer/create";
+            }
+            
+            customerService.createCustomer(customer, storeId);
             return "redirect:/admin/customer?success";
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());

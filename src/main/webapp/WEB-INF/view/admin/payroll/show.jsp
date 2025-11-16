@@ -38,8 +38,11 @@
                                     Danh sách bảng lương
                                 </div>
                                 <div class="col-md-6 text-end">
-                                    <a href="/admin/payroll/calculate" class="btn btn-success btn-sm">
-                                        <i class="fas fa-calculator me-1"></i>Tính lương
+                                    <a href="/admin/payroll/create" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-user-plus me-1"></i>Tính lương cho 1 nhân viên
+                                    </a>
+                                    <a href="/admin/payroll/batch-create" class="btn btn-success btn-sm">
+                                        <i class="fas fa-users me-1"></i>Tính lương hàng loạt
                                     </a>
                                     <a href="/admin/payroll/report" class="btn btn-info btn-sm">
                                         <i class="fas fa-chart-bar me-1"></i>Báo cáo

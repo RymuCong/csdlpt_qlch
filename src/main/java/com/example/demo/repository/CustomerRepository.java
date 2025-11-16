@@ -3,6 +3,7 @@ package com.example.demo.repository;
 import com.example.demo.domain.Customer;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
@@ -48,5 +49,12 @@ public interface CustomerRepository extends JpaRepository<Customer, String> {
      */
     @Query("SELECT COALESCE(SUM(c.totalPayment), 0) FROM Customer c")
     BigDecimal calculateTotalRevenue();
+    
+    /**
+     * Đếm số lượng khách hàng theo chi nhánh (dựa vào prefix trong ID)
+     * Ví dụ: CN02_CUS0001, CN02_CUS0002 -> count = 2
+     */
+    @Query("SELECT COUNT(c) FROM Customer c WHERE c.id LIKE :storeIdPrefix")
+    Long countByStoreIdPrefix(@Param("storeIdPrefix") String storeIdPrefix);
 }
 

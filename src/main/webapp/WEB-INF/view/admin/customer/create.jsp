@@ -89,7 +89,7 @@
                                                     <i class="fas fa-info-circle me-1"></i>
                                                     <strong>Lưu ý:</strong> 
                                                     <ul class="mb-0 mt-1 ps-3">
-                                                        <li>Mã khách hàng sẽ tự động sinh (KH001, KH002,...)</li>
+                                                        <li>Mã khách hàng sẽ tự động sinh theo chi nhánh (VD: CN02_CUS0001, CN02_CUS0002,...)</li>
                                                         <li>Cấp độ thành viên tự động tính dựa trên tổng chi tiêu</li>
                                                         <li>Tổng chi tiêu sẽ cập nhật khi khách hàng mua hàng</li>
                                                     </ul>

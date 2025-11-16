@@ -114,5 +114,15 @@ public class CategoryService {
     public Long countProductsInCategory(String categoryId) {
         return categoryRepository.countProductsByCategoryId(categoryId);
     }
+    
+    /**
+     * Đếm số sản phẩm trong danh mục theo cửa hàng
+     */
+    public Long countProductsInCategoryByStore(String categoryId, String storeId) {
+        if (storeId == null) {
+            return countProductsInCategory(categoryId);
+        }
+        return categoryRepository.countProductsByCategoryIdAndStoreId(categoryId, storeId);
+    }
 }
 

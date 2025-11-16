@@ -116,14 +116,19 @@
                                         <label class="form-label">
                                             <i class="fas fa-user me-1"></i>Khách hàng (không bắt buộc)
                                         </label>
-                                        <select id="customerId" class="form-select">
-                                            <option value="">Khách lẻ</option>
-                                            <c:forEach var="customer" items="${customers}">
-                                                <option value="${customer.id}">
-                                                    ${customer.name} - ${customer.phone} (Level ${customer.level})
-                                                </option>
-                                            </c:forEach>
-                                        </select>
+                                        <div class="input-group">
+                                            <select id="customerId" class="form-select">
+                                                <option value="">Khách lẻ</option>
+                                                <c:forEach var="customer" items="${customers}">
+                                                    <option value="${customer.id}">
+                                                        ${customer.name} - ${customer.phone} (Level ${customer.level})
+                                                    </option>
+                                                </c:forEach>
+                                            </select>
+                                            <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#quickCustomerModal">
+                                                <i class="fas fa-user-plus me-1"></i>Tạo nhanh
+                                            </button>
+                                        </div>
                                     </div>
                                     
                                     <!-- Payment method -->
@@ -174,8 +179,38 @@
         </div>
     </div>
     
+    <!-- Quick Create Customer Modal -->
+    <div class="modal fade" id="quickCustomerModal" tabindex="-1" aria-labelledby="quickCustomerModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="quickCustomerModalLabel"><i class="fas fa-user-plus me-2"></i>Tạo nhanh khách hàng</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Tên khách hàng</label>
+                        <input type="text" id="qcName" class="form-control" placeholder="VD: Nguyễn Văn A">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Số điện thoại</label>
+                        <input type="text" id="qcPhone" class="form-control" placeholder="VD: 0987654321">
+                    </div>
+                    <div class="alert alert-danger d-none" id="qcError"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-primary" id="btnQuickCreateCustomer">
+                        <i class="fas fa-save me-1"></i>Lưu và chọn
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/scripts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         let cart = [];
         const employeeId = '${defaultEmployeeId}';
@@ -183,7 +218,11 @@
         // Add product to cart
         function addToCart(id, name, price, maxQty) {
             if (maxQty <= 0) {
-                alert('Sản phẩm đã hết hàng!');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Hết hàng',
+                    text: 'Sản phẩm đã hết hàng!'
+                });
                 return;
             }
             
@@ -192,7 +231,11 @@
                 if (existingItem.quantity < maxQty) {
                     existingItem.quantity++;
                 } else {
-                    alert('Không đủ hàng trong kho!');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Không đủ hàng',
+                        text: 'Không đủ hàng trong kho!'
+                    });
                     return;
                 }
             } else {
@@ -253,7 +296,11 @@
                 cart[index].quantity++;
                 updateCart();
             } else {
-                alert('Không đủ hàng trong kho!');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Không đủ hàng',
+                    text: 'Không đủ hàng trong kho!'
+                });
             }
         }
         
@@ -273,10 +320,25 @@
         
         // Clear cart
         function clearCart() {
-            if (confirm('Bạn có chắc muốn xóa tất cả sản phẩm?')) {
-                cart = [];
-                updateCart();
-            }
+            Swal.fire({
+                title: 'Xóa giỏ hàng?',
+                text: 'Bạn có chắc muốn xóa tất cả sản phẩm?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Xóa',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    cart = [];
+                    updateCart();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Đã xóa giỏ hàng',
+                        timer: 1200,
+                        showConfirmButton: false
+                    });
+                }
+            });
         }
         
         // Update total
@@ -306,7 +368,11 @@
         // Submit bill
         function submitBill() {
             if (cart.length === 0) {
-                alert('Giỏ hàng trống!');
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Giỏ hàng trống',
+                    text: 'Vui lòng chọn sản phẩm trước khi thanh toán.'
+                });
                 return;
             }
             
@@ -335,16 +401,96 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert('Tạo hóa đơn thành công! Mã hóa đơn: ' + data.billId);
-                    window.location.href = '/admin/bill/' + data.billId + '/print';
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Tạo hóa đơn thành công',
+                        html: 'Mã hóa đơn: <strong>' + data.billId + '</strong><br>Bạn có muốn in hóa đơn ngay?',
+                        showCancelButton: true,
+                        confirmButtonText: 'In hóa đơn',
+                        cancelButtonText: 'Xem danh sách'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.open('/admin/bill/' + data.billId + '/print', '_blank');
+                            window.location.href = '/admin/bill';
+                        } else {
+                            window.location.href = '/admin/bill';
+                        }
+                    });
                 } else {
-                    alert('Lỗi: ' + data.message);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Không thể tạo hóa đơn',
+                        text: (data.message || 'Đã xảy ra lỗi không xác định')
+                    });
                 }
             })
             .catch(error => {
-                alert('Có lỗi xảy ra: ' + error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Có lỗi xảy ra',
+                    text: String(error)
+                });
             });
         }
+        
+        // Quick create customer
+        document.getElementById('btnQuickCreateCustomer').addEventListener('click', function() {
+            const name = document.getElementById('qcName').value.trim();
+            const phone = document.getElementById('qcPhone').value.trim();
+            const err = document.getElementById('qcError');
+            err.classList.add('d-none');
+            err.textContent = '';
+            
+            if (!name || !phone) {
+                err.textContent = 'Vui lòng nhập đầy đủ tên và số điện thoại.';
+                err.classList.remove('d-none');
+                return;
+            }
+            
+            fetch('/admin/customer/quick-create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    '${_csrf.headerName}': '${_csrf.token}'
+                },
+                body: JSON.stringify({ name: name, phone: phone })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    // Thêm vào dropdown và chọn luôn
+                    const sel = document.getElementById('customerId');
+                    const opt = document.createElement('option');
+                    opt.value = data.id;
+                    opt.text = data.name + ' - ' + data.phone + ' (Level ' + data.level + ')';
+                    sel.add(opt);
+                    sel.value = data.id;
+                    updateTotal();
+                    // Đóng modal
+                    const modalEl = document.getElementById('quickCustomerModal');
+                    const modal = bootstrap.Modal.getInstance(modalEl);
+                    modal.hide();
+                    // Reset form
+                    document.getElementById('qcName').value = '';
+                    document.getElementById('qcPhone').value = '';
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Đã tạo khách hàng',
+                        text: data.name + ' (' + data.phone + ')',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                } else {
+                    err.textContent = data.message || 'Không thể tạo khách hàng.';
+                    err.classList.remove('d-none');
+                }
+            })
+            .catch(e => {
+                err.textContent = 'Có lỗi xảy ra: ' + e;
+                err.classList.remove('d-none');
+            });
+        });
         
         // Format currency
         function formatCurrency(amount) {

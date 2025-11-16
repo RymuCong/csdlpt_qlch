@@ -102,24 +102,32 @@
                                                 </small>
                                             </c:if>
                                         </p>
-
-                                        <div class="input-group quantity mb-5" style="width: 100px;">
-                                            <div class="input-group-btn">
-                                                <button class="btn btn-sm btn-minus rounded-circle bg-light border">
-                                                    <i class="fa fa-minus"></i>
-                                                </button>
-                                            </div>
-                                            <input type="text" class="form-control form-control-sm text-center border-0"
-                                                value="1">
-                                            <div class="input-group-btn">
-                                                <button class="btn btn-sm btn-plus rounded-circle bg-light border">
-                                                    <i class="fa fa-plus"></i>
-                                                </button>
-                                            </div>
+                                        
+                                        <!-- Actions: điều hướng thay cho giỏ hàng -->
+                                        <div class="d-grid gap-2 mb-4">
+                                            <a href="/products"
+                                               class="btn btn-outline-secondary rounded-pill px-4 py-2">
+                                                <i class="fa fa-arrow-left me-2"></i>Quay lại danh sách
+                                            </a>
+                                            <c:if test="${product.category != null}">
+                                                <a href="/products?categoryId=${product.category.id}"
+                                                   class="btn btn-danger rounded-pill px-4 py-2 text-white">
+                                                    <i class="fa fa-tags me-2"></i>Xem sản phẩm cùng danh mục
+                                                </a>
+                                            </c:if>
                                         </div>
-                                        <a href="#"
-                                            class="btn border border-secondary rounded-pill px-4 py-2 mb-4 text-primary"><i
-                                                class="fa fa-shopping-bag me-2 text-primary"></i> Thêm vào giỏ hàng</a>
+                                        
+                                        <!-- Thông tin nhanh -->
+                                        <div class="mt-3">
+                                            <span class="badge bg-light text-dark border me-2">
+                                                <i class="fa fa-barcode me-1"></i>Mã: ${product.id}
+                                            </span>
+                                            <c:if test="${product.store != null}">
+                                                <span class="badge bg-light text-dark border">
+                                                    <i class="fa fa-store me-1"></i>CN: ${product.store.id}
+                                                </span>
+                                            </c:if>
+                                        </div>
                                     </div>
                                     <div class="col-lg-12">
                                         <nav>

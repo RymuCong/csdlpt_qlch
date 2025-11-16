@@ -203,6 +203,10 @@ public class PayRollController {
         PayRollDTO payRollDTO = new PayRollDTO();
         if (employeeId != null) {
             payRollDTO.setEmployeeId(employeeId);
+            // Lấy thông tin nhân viên để hiển thị
+            employeeService.getEmployeeById(employeeId).ifPresent(emp -> {
+                model.addAttribute("selectedEmployee", emp);
+            });
         }
         model.addAttribute("payRollDTO", payRollDTO);
         model.addAttribute("selectedEmployeeId", employeeId);
